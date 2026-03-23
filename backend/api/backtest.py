@@ -1,7 +1,7 @@
 import datetime
 import inspect
 import logging
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 from api.models import StrategyInfo, StrategyParamInfo
 
@@ -71,6 +71,7 @@ class BacktestAPI:
         flat_commission: float = 0.0,
         auto_fetch: bool = True,
         include_benchmark: bool = True,
+        auxiliary_series: List[Tuple[str, str]] = None,
     ) -> Dict[str, BacktestResult]:
         """
         Run a full backtest. Handles DB connection, optional ingestion,
@@ -87,10 +88,16 @@ class BacktestAPI:
         
         # Auto-fetch data if needed
         if auto_fetch:
-            logger.info(f"Ensuring data for {symbol} is available in the database from {start.date()} to {end.date()}...")
+            logger.info(f"Ensuring master data for {symbol} is available in the database from {start.date()} to {end.date()}...")
             provider = YFinanceIngester()
             ingestion_engine = IngestionEngine(db_manager, provider)
             ingestion_engine.ingest(symbol, timeframe, start, end)
+            
+            # Fetch auxiliary data
+            if auxiliary_series:
+                for aux_sym, aux_tf in auxiliary_series:
+                    logger.info(f"Ensuring aux data for {aux_sym} ({aux_tf}) is available...")
+                    ingestion_engine.ingest(aux_sym, aux_tf, start, end)
 
         # Check if we have data
         db_range = db_manager.get_data_range(symbol, timeframe)
@@ -119,7 +126,8 @@ class BacktestAPI:
             initial_capital=initial_capital,
             lookback=lookback, 
             commission_pct=commission_pct,
-            flat_commission=flat_commission
+            flat_commission=flat_commission,
+            auxiliary_series=auxiliary_series
         )
 
         return engine.run()

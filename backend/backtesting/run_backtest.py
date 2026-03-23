@@ -44,6 +44,7 @@ def main():
     full_parser.add_argument("--end", type=str, default="2023-01-01", help="End date YYYY-MM-DD")
     full_parser.add_argument("--lookback", type=int, default=50, help="Number of historical bars to pass to strategy per tick")
     full_parser.add_argument("--no-fetch", action="store_true", help="Disable auto-fetching missing data")
+    full_parser.add_argument("--aux", type=str, nargs='*', help="Auxiliary series to load as 'SYMBOL:TIMEFRAME', e.g. 'SPY:1min' 'QQQ:1hr'")
 
     # Add dynamically discovered arguments for the chosen strategy
     try:
@@ -83,6 +84,16 @@ def main():
         args.strategy: strat
     }
 
+    # Parse aux series
+    auxiliary_series = []
+    if args.aux:
+        for aux_str in args.aux:
+            parts = aux_str.split(':')
+            if len(parts) == 2:
+                auxiliary_series.append((parts[0], parts[1]))
+            else:
+                logging.warning(f"Ignoring invalid aux format '{aux_str}', expected SYMBOL:TIMEFRAME")
+
     # Run
     try:
         results = BacktestAPI.run(
@@ -96,7 +107,8 @@ def main():
             commission_pct=0.001, # 0.1% fee
             flat_commission=0.0,
             auto_fetch=not args.no_fetch,
-            include_benchmark=True
+            include_benchmark=True,
+            auxiliary_series=auxiliary_series
         )
         
         # Print Summary Table

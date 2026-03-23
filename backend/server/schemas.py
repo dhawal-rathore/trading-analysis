@@ -14,6 +14,7 @@ class RunBacktestRequest(BaseModel):
     commission_pct: float = 0.001
     auto_fetch: bool = True
     include_benchmark: bool = True
+    auxiliary_series: Optional[List[List[str]]] = None
 
 class StrategyParamSchema(BaseModel):
     name: str

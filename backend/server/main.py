@@ -41,6 +41,11 @@ def run_backtest(req: RunBacktestRequest):
         # Build strategy
         strat = BacktestAPI.build_strategy(req.strategy, **req.strategy_params)
         
+        # Convert auxiliary_series to list of tuples if present
+        auxiliary_series = None
+        if req.auxiliary_series:
+            auxiliary_series = [tuple(x) for x in req.auxiliary_series if len(x) == 2]
+
         # Run 
         raw_results = BacktestAPI.run(
             symbol=req.symbol,
@@ -53,7 +58,8 @@ def run_backtest(req: RunBacktestRequest):
             commission_pct=req.commission_pct,
             flat_commission=0.0,
             auto_fetch=req.auto_fetch,
-            include_benchmark=req.include_benchmark
+            include_benchmark=req.include_benchmark,
+            auxiliary_series=auxiliary_series
         )
 
         # Format results for JSON response
