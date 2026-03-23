@@ -2,6 +2,7 @@ import argparse
 import datetime
 import logging
 import sys
+import re
 
 from api import BacktestAPI
 from backtesting.chart import plot_results
@@ -21,6 +22,26 @@ def print_available_strategies():
     print("\nBenchmark Strategy:")
     print(f"  {'BuyAndHoldStrategy':<20} (Always included for comparison)")
     print()
+
+def build_chart_filename(results: dict, symbol: str, timeframe: str) -> str:
+    """Builds a sanitized filename like backtest_RSIStrategy_vs_Buy_and_Hold_SPY_1day.png"""
+    names = list(results.keys())
+    if not names:
+        return f"backtest_comparison_{symbol}_{timeframe}.png"
+        
+    # Sanitize each name: replace unsafe chars and spaces with underscore
+    sanitized_names = []
+    for name in names:
+        # replace any char that is not word, digit, or hyphen with underscore
+        clean = re.sub(r'[^\w\-]', '_', name)
+        # merge multiple underscores into one
+        clean = re.sub(r'_+', '_', clean)
+        # strip leading/trailing underscores
+        clean = clean.strip('_')
+        sanitized_names.append(clean)
+        
+    joined_names = "_vs_".join(sanitized_names)
+    return f"backtest_{joined_names}_{symbol}_{timeframe}.png"
 
 def main():
     # Pre-parse just the top-level arguments to intercept --list-strategies or extract the chosen strategy
@@ -122,7 +143,7 @@ def main():
         print("="*85 + "\n")
 
         # Plot
-        chart_filename = f"backtest_comparison_{args.symbol}_{args.timeframe}.png"
+        chart_filename = build_chart_filename(results, args.symbol, args.timeframe)
         fig = plot_results(results, filename=chart_filename, show=False)
         
     except Exception as e:
