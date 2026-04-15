@@ -175,7 +175,3 @@ Use `--no-fetch` to skip automatic Yahoo ingestion.
 - **Backend:** Python 3.11, psycopg2, pandas, yfinance, matplotlib, FastAPI, uvicorn, pytest  
 - **Frontend:** React 18, TypeScript, Vite, Recharts, nginx (Alpine)  
 - **Database:** PostgreSQL 16  
-
-## License
-
-No license file is included by default; add one if you distribute the project.
